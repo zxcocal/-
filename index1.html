@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>настюше</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --primary: #ff4da6;
+    --shadow: 0 20px 60px rgba(255, 77, 166, 0.2);
+}
+
+body{
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Poppins', Arial, sans-serif;
+    background: linear-gradient(135deg, #ffb6d9 0%, #ff8fcf 50%, #ffc3e6 100%);
+    overflow: hidden;
+    color: #333;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.12) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(255,192,203,0.12) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* Увеличенные окна */
+.card, .popup, .memory-slide, .drawing-slide, .final-slide {
+    background: white;
+    padding: 55px 45px;
+    border-radius: 32px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    max-width: 520px;           /* ← Сделал окна шире */
+    width: 90%;
+    border: 3px solid rgba(255, 77, 166, 0.12);
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+}
+
+/* Сердечки в углах окна */
+.card::before, .popup::before, .memory-slide::before, .drawing-slide::before, .final-slide::before,
+.card::after, .popup::after, .memory-slide::after, .drawing-slide::after, .final-slide::after {
+    content: '♥';
+    position: absolute;
+    font-size: 28px;
+    color: #ff4da6;
+    opacity: 0.5;
+}
+
+.card::before, .popup::before, .memory-slide::before, .drawing-slide::before, .final-slide::before {
+    top: 12px;
+    left: 15px;
+    transform: rotate(-25deg);
+}
+
+.card::after, .popup::after, .memory-slide::after, .drawing-slide::after, .final-slide::after {
+    top: 12px;
+    right: 15px;
+    transform: rotate(25deg);
+}
+
+.card, .popup, .memory-slide, .drawing-slide, .final-slide {
+    --corner-heart-bottom-left: attr(data-corner-1);
+    --corner-heart-bottom-right: attr(data-corner-2);
+}
+
+.card {
+    width: 360px;
+    animation: fadeIn 1.2s ease;
+}
+
+.popup, .memory-slide, .drawing-slide, .final-slide {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 10;
+}
+
+.show {
+    transform: translate(-50%, -50%) scale(1) !important;
+}
+
+h2{
+    font-family: 'Great Vibes', cursive;
+    font-size: 38px;
+    margin: 0 0 28px;
+    color: var(--primary);
+}
+
+button{
+    border: none;
+    padding: 15px 32px;
+    margin: 15px 8px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 17.5px;
+    font-weight: 500;
+    transition: all 0.4s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+button:hover {
+    transform: scale(1.1);
+}
+
+/* Кнопка "Да" */
+.yes{
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 12px 35px rgba(255,77,166,0.4);
+}
+
+/* Котик */
+.cat{
+    font-size: 85px;
+    margin: 20px 0 25px;
+    animation: catMove 3s infinite alternate ease-in-out;
+}
+
+@keyframes catMove{
+    from { transform: translateY(0) rotate(-5deg) scale(1); }
+    to   { transform: translateY(-18px) rotate(4deg) scale(1.06); }
+}
+
+/* Письмо */
+.letter{
+    margin: 30px 0;
+    background: linear-gradient(135deg, #fff5f8, #ffe6f3);
+    padding: 30px 25px;
+    border-radius: 22px;
+    font-family: 'Great Vibes', cursive;
+    font-size: 27px;
+    line-height: 1.65;
+    color: #d63384;
+    overflow-y: auto;
+    max-height: 300px;
+}
+
+/* Окно "Помнишь?" — большое фото 16:9 */
+.memory-slide img {
+    width: 100%;
+    max-width: 460px;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 22px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    margin: 25px 0;
+}
+
+/* Окно "Вот что получилось" — большая фото с лупой */
+.drawing-slide img {
+    width: 100%;
+    max-width: 460px;
+    border-radius: 22px;
+    box-shadow: 0 15px 45px rgba(0,0,0,0.25);
+    margin: 25px 0;
+    transition: all 0.5s ease;
+    cursor: zoom-in;
+}
+
+.drawing-slide img:hover {
+    transform: scale(1.08);           /* ← Исправленный эффект увеличения */
+    box-shadow: 0 25px 60px rgba(255, 77, 166, 0.35);
+}
+
+/* Discord диалог стиль */
+.discord-chat {
+    background: #36393f;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 20px 0;
+    max-height: 400px;
+    overflow-y: auto;
+    text-align: left;
+    font-family: 'Whitney', 'Helvetica Neue', Arial, sans-serif;
+}
+
+.discord-message {
+    display: flex;
+    margin-bottom: 15px;
+    gap: 12px;
+}
+
+.discord-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff4da6, #ffb6d9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.discord-content {
+    flex: 1;
+}
+
+.discord-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.discord-username {
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.discord-time {
+    color: #72767d;
+    font-size: 12px;
+}
+
+.discord-text {
+    color: #dbdee1;
+    font-size: 15px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+/* Сердечки в нижних углах окна */
+.corner-heart {
+    position: absolute;
+    font-size: 28px;
+    color: #ff4da6;
+    opacity: 0.5;
+}
+
+.corner-heart.bottom-left {
+    bottom: 12px;
+    left: 15px;
+    transform: rotate(-45deg);
+}
+
+.corner-heart.bottom-right {
+    bottom: 12px;
+    right: 15px;
+    transform: rotate(45deg);
+}
+
+/* Плавающие сердечки */
+.heart{
+    position: absolute;
+    animation: float linear forwards;
+    pointer-events: none;
+    z-index: 5;
+}
+
+@keyframes float{
+    0%   { transform: translateY(110vh); opacity: 0; }
+    10%  { opacity: 1; }
+    100% { transform: translateY(-25vh); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="card" id="mainCard">
+    <span class="corner-heart bottom-left">♥</span>
+    <span class="corner-heart bottom-right">♥</span>
+    <h2>Хочешь я тебя порадую?</h2>
+    <button class="yes" onclick="openLove()">Да, очень </button>
+    <button class="no" id="noBtn">Нет!</button>
+</div>
+
+<div class="popup" id="popup">
+    <span class="corner-heart bottom-left">♥</span>
+    <span class="corner-heart bottom-right">♥</span>
+    <h2>Моей любимой<br>мини стишок, дальше лучше🥰</h2>
+    <div class="cat">😎</div>
+    <div class="letter">
+        Меж двух дорог душа моя блуждает,<br>
+        То к свету рвётся, то во тьму опять.<br>
+        То смело ввысь надеждой поднимает,<br>
+        То падает, уставшая мечтать.<br>
+        <br>
+        То сердце верит в счастье без границы,<br>
+        То холод сомнений душу жжёт.<br>
+        И, словно птица раненая, мчится<br>
+        Туда, где боль её уже не ждёт.<br>
+        <br>
+        О, как же трудно выбрать направленье,<br>
+        Когда зовут и небо, и земля.<br>
+        Душа живёт в тревожном колебанье —<br>
+        Меж «нет» и «да», меж «я» и «не-я».<br>
+    </div>
+    <button onclick="kiss()">Цьом</button>
+</div>
+
+<div class="popup" id="kissPopup">
+    <span class="corner-heart bottom-left">♥</span>
+    <span class="corner-heart bottom-right">♥</span>
+    <h2>Я тебя люблю</h2>
+    <p style="font-size:19px; margin:15px 0 25px;">Люблю тебя больше чем вчера но меньше чем завтра.</p>
+    <img src="photo_2026-01-30_22-04-39.jpg" style="width:280px; border-radius:20px; box-shadow:0 15px 40px rgba(0,0,0,0.25);" alt="Мы">
+    <br><br>
+    <button onclick="showMemorySlide()">Дальше</button>
+</div>
+
+<!-- Окно "Помнишь?" — Discord диалог -->
+<div class="popup memory-slide" id="memorySlide">
+    <span class="corner-heart bottom-left">♥</span>
+    <span class="corner-heart bottom-right">♥</span>
+    <h2>Это было так...</h2>
+    
+    <div class="discord-chat">
+        <!-- kriss сообщение 1 -->
+        <div class="discord-message">
+            <div class="discord-avatar">К</div>
+            <div class="discord-content">
+                <div class="discord-header">
+                    <span class="discord-username">kriss</span>
+                    <span class="discord-time">26.01.2026 2:14</span>
+                </div>
+                <div class="discord-text">ты подумала?</div>
+            </div>
+        </div>
+
+        <!-- kriss сообщение 2 -->
+        <div class="discord-message">
+            <div class="discord-avatar" style="opacity: 0;"></div>
+            <div class="discord-content">
+                <div class="discord-text">я же тебе говорил что люблю тебя</div>
+            </div>
+        </div>
+
+        <!-- kriss сообщение 3 -->
+        <div class="discord-message">
+            <div class="discord-avatar" style="opacity: 0;"></div>
+            <div class="discord-content">
+                <div class="discord-text">я не хочу быть твоим просто другом</div>
+            </div>
+        </div>
+
+        <!-- kriss сообщение 4 -->
+        <div class="discord-message">
+            <div class="discord-avatar" style="opacity: 0;"></div>
+            <div class="discord-content">
+                <div class="discord-text">может</div>
+            </div>
+        </div>
+
+        <!-- kriss сообщение 5 -->
+        <div class="discord-message">
+            <div class="discord-avatar" style="opacity: 0;"></div>
+            <div class="discord-content">
+                <div class="discord-text">ну..</div>
+            </div>
+        </div>
+
+        <!-- Discussia сообщение 1 -->
+        <div class="discord-message" style="margin-top: 20px;">
+            <div class="discord-avatar" style="background: linear-gradient(135deg, #5865f2, #7289da);">Д</div>
+            <div class="discord-content">
+                <div class="discord-header">
+                    <span class="discord-username">Discussia</span>
+                    <span class="discord-time">26.01.2026 2:15</span>
+                </div>
+                <div class="discord-text">Ты мне не просто друг</div>
+            </div>
+        </div>
+
+        <!-- kriss сообщение 6 -->
+        <div class="discord-message" style="margin-top: 20px;">
+            <div class="discord-avatar">К</div>
+            <div class="discord-content">
+                <div class="discord-header">
+                    <span class="discord-username">kriss</span>
+                    <span class="discord-time">26.01.2026 2:15</span>
+                </div>
+                <div class="discord-text">ты будешь со мной встречаться?</div>
+            </div>
+        </div>
+
+        <!-- Discussia сообщение 2 -->
+        <div class="discord-message">
+            <div class="discord-avatar" style="background: linear-gradient(135deg, #5865f2, #7289da); opacity: 0;"></div>
+            <div class="discord-content">
+                <div class="discord-header">
+                    <span class="discord-username">Discussia</span>
+                    <span class="discord-time">26.01.2026 2:15</span>
+                </div>
+                <div class="discord-text">да</div>
+            </div>
+        </div>
+
+        <!-- kriss сообщение 7 -->
+        <div class="discord-message">
+            <div class="discord-avatar" style="opacity: 0;"></div>
+            <div class="discord-content">
+                <div class="discord-header">
+                    <span class="discord-username">kriss</span>
+                    <span class="discord-time">26.01.2026 2:15</span>
+                </div>
+                <div class="discord-text">люблю тебя</div>
+            </div>
+        </div>
+    </div>
+
+    <button onclick="showDrawingSlide()">Продолжить</button>
+</div>
+
+<!-- Окно "Вот что получилось ✨" — большая фотография -->
+<div class="popup drawing-slide" id="drawingSlide">
+    <span class="corner-heart bottom-left">♥</span>
+    <span class="corner-heart bottom-right">♥</span>
+    <h2>Я кое что нарисовал криво косо, но зато я рядом...</h2>
+    
+    <img src="МЫ.jpg" alt="Мой рисунок для тебя">
+
+    <div class="letter">
+        Я решил нарисовать что-то,<br>
+        чтобы хоть немного быть ближе к тебе<br>
+        и показать, как сильно я тебя люблю.<br>
+        <br>
+        Я знаю, что это не шедевр, но я вложил в него всю свою любовь и нежность.
+    </div>
+    
+    <button onclick="showFinalSlide()">Дальше</button>
+</div>
+
+<!-- Финальный слайд -->
+<div class="popup final-slide" id="finalSlide">
+    <span class="corner-heart bottom-left">♥</span>
+    <span class="corner-heart bottom-right">♥</span>
+    <h2>Моя кисюля,цьом</h2>
+    <p>Я не хочу, чтобы тебе было грустно,<br>поэтому создал этот миленький сайт...</p>
+    <p>Ведь я сейчас не рядом, и пока что только так могу быть с тобой.</p>
+    <p style="margin-top:25px; font-size:21px; color:#ff4da6;">
+        Пусть на твоём лице всегда будет улыбка<br>
+        <strong>Люблю тебя очень сильно ❤️</strong>
+    </p>
+    
+    <button onclick="restart()" style="margin-top:35px; background:#ff4da6; color:white; padding:16px 36px;">
+        Начать заново 💕
+    </button>
+</div>
+
+<script>
+// Кнопка "Нет"
+const noBtn = document.getElementById("noBtn");
+let noClicks = 0;
+
+noBtn.addEventListener("mouseover", () => {
+    noClicks++;
+    const x = Math.random() * 400 - 200;
+    const y = Math.random() * 240 - 120;
+    
+    noBtn.style.transition = "transform 0.25s";
+    noBtn.style.transform = `translate(${x}px, ${y}px)`;
+    
+    if (noClicks > 5) noBtn.textContent = "Ну пожалуйста... 🥺";
+});
+
+// Переходы между окнами
+function openLove() {
+    document.getElementById("mainCard").style.display = "none";
+    document.getElementById("popup").classList.add("show");
+}
+
+function kiss() {
+    document.getElementById("popup").classList.remove("show");
+    document.getElementById("kissPopup").classList.add("show");
+}
+
+function showMemorySlide() {
+    document.getElementById("kissPopup").classList.remove("show");
+    document.getElementById("memorySlide").classList.add("show");
+}
+
+function showDrawingSlide() {
+    document.getElementById("memorySlide").classList.remove("show");
+    document.getElementById("drawingSlide").classList.add("show");
+}
+
+function showFinalSlide() {
+    document.getElementById("drawingSlide").classList.remove("show");
+    document.getElementById("finalSlide").classList.add("show");
+}
+
+// Перезапуск
+function restart() {
+    document.querySelectorAll('.popup').forEach(el => el.classList.remove('show'));
+    document.getElementById("mainCard").style.display = "block";
+    
+    noClicks = 0;
+    noBtn.style.transform = "translate(0, 0)";
+    noBtn.style.opacity = "1";
+    noBtn.textContent = "Нет";
+}
+
+// Плавающие сердечки
+const hearts = ["💖","💕","💗","💓","💘","💝"];
+
+function createHeart() {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+    heart.innerHTML = hearts[Math.floor(Math.random()*hearts.length)];
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.fontSize = (26 + Math.random()*38) + "px";
+    heart.style.animationDuration = (7 + Math.random()*9) + "s";
+    heart.style.opacity = Math.random() * 0.65 + 0.55;
+    
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 17000);
+}
+
+setInterval(createHeart, 300);
+</script>
+</body>
+</html>
